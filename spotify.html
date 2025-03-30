@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotify</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Montserrat', sans-serif;
+            background-color: #121212;
+            color: white;
+        }
+
+        .sidebar {
+            width: 250px;
+            height: 100vh;
+            background-color: #000;
+            padding: 20px;
+            position: fixed;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .nav-links {
+            margin-top: 20px;
+        }
+
+        .nav-links a {
+            display: block;
+            color: #b3b3b3;
+            text-decoration: none;
+            font-size: 16px;
+            padding: 10px 0;
+            transition: color 0.2s ease-in-out;
+        }
+
+        .nav-links a:hover {
+            color: white;
+        }
+
+        .main {
+            margin-left: 270px;
+            padding: 30px;
+        }
+
+        .greeting {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .playlist-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .playlist {
+            background-color: #181818;
+            padding: 15px;
+            border-radius: 10px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.2s ease-in-out, transform 0.2s ease-in-out;
+        }
+
+        .playlist:hover {
+            background-color: #282828;
+            transform: scale(1.05);
+        }
+
+        .playlist img {
+            width: 100%;
+            border-radius: 8px;
+        }
+
+        .playlist p {
+            margin-top: 10px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .play-button {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            background-color: #1db954;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-size: 20px;
+            color: black;
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
+        }
+
+        .playlist:hover .play-button {
+            opacity: 1;
+        }
+
+        #audio-player {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #282828;
+            padding: 10px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        #audio-player p {
+            margin: 0;
+            color: white;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <h1>Spotify</h1>
+        <div class="nav-links">
+            <a href="#">🏠 Home</a>
+            <a href="#">🔍 Search</a>
+            <a href="#">📚 Library</a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main">
+        <p class="greeting">Good Evening</p>
+
+        <div class="playlist-container" id="playlist-container"></div>
+    </div>
+
+    <!-- Audio Player -->
+    <div id="audio-player" style="display: none;">
+        <p id="now-playing">Now Playing: </p>
+        <audio id="audio" controls></audio>
+    </div>
+
+    <script>
+        const playlists = [
+            { name: "Top Hits", image: "https://imgs.search.brave.com/K1xbl_YfEtDxkxpR9KVeyA6uGQbbZu-rV4KFRel0r6o/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9jaGFy/dG1hc3RlcnMub3Jn/L3dwLWNvbnRlbnQv/dXBsb2Fkcy8yMDIz/LzEwL1RvcC10cmFj/a3MtU3BvdGlmeS1z/dHJlYW1zLmpwZw", song: "Shape of You", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" },
+            { name: "Chill Vibes", image: "https://imgs.search.brave.com/-WguueUI-dc7pq3lAlLFMUcfwwJi8bdd0gCTzIkFcWA/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly92b25k/eS1pbWFnZXMuY29t/L2ltYWdlLXByb3h5/P3c9NDAwJnVybD1o/dHRwczovL3Byb3Rv/aW5mcmFzdGFjay1t/eWZpcnN0YnVja2V0/Yjg4ODQ1MDEtZm5u/enZ4dDJlZTV2LnMz/LmFtYXpvbmF3cy5j/b20vblAycXJjUkNX/VndlRnV5WElFWGhO/OXMzTFJkT2dUQXhm/cWZSLnBuZw", song: "Lo-Fi Chill", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" },
+            { name: "Workout Mix", image: "https://imgs.search.brave.com/si53yzsi6Yhfs6ZgDVDDiPcd9jRvBHBIB50vyy8JBvA/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9hLnN0/b3J5Ymxvay5jb20v/Zi8xOTc4MDUvMTA4/MHgxMDgwL2NkMDM1/MGQ1NGUvd29ya291/dC1zcG90aWZ5LXBs/YXlsaXN0LnBuZy9t/LzB4MTk4L2ZpbHRl/cnM6Zm9ybWF0KHBu/Zyk6cXVhbGl0eSg3/NSk", song: "Stronger - Kanye West", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3" },
+            { name: "Old Classics", image: "https://imgs.search.brave.com/CC9Ebzdk5Dh8MmquOd-90WXzTW9WqLkZNsUv-ALGY9A/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9pbWdz/LmNsYXNzaWNmbS5j/b20vaW1hZ2VzLzMx/NDI4OT9jcm9wPTFf/MSZ3aWR0aD02NjAm/Zm9ybWF0PXdlYnAm/c2lnbmF0dXJlPWpy/NlVLQ0tSZnd5VDlN/Y216dU5fbmIzamNx/bz0", song: "Bohemian Rhapsody", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3" }
+        ];
+
+        const container = document.getElementById("playlist-container");
+        const audioPlayer = document.getElementById("audio-player");
+        const audioElement = document.getElementById("audio");
+        const nowPlayingText = document.getElementById("now-playing");
+
+        playlists.forEach(playlist => {
+            const div = document.createElement("div");
+            div.className = "playlist";
+
+            div.innerHTML = `
+                <img src="${playlist.image}" alt="${playlist.name}">
+                <p>${playlist.name}</p>
+                <div class="play-button">▶</div>
+            `;
+
+            div.addEventListener("click", () => {
+                nowPlayingText.textContent = `Now Playing: ${playlist.song}`;
+                audioElement.src = playlist.url;
+                audioElement.play();
+                audioPlayer.style.display = "flex";
+
+                console.log(`Playing: ${playlist.song}`);
+            });
+
+            container.appendChild(div);
+        });
+    </script>
+
+</body>
+</html>
